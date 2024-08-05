@@ -1,5 +1,6 @@
 package study.querydsl;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.dto.MemberDto;
+import study.querydsl.dto.QMemberDto;
 import study.querydsl.dto.UserDto;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
@@ -36,8 +38,8 @@ public class QuerydslBasicTest {
      *  member.age.in(10, 20)  -> age in (10, 20)
      *  member.age.between(10, 30) -> between 10, 30
      *
-     *  member.age.goe(30) -> age >= 30
      *  member.age.gt(30)  -> age > 30
+     *      *  member.age.goe(30) -> age >= 30
      *  member.age.loe(30) -> age <= 30
      *  member.age.lt(30) -> age < 30
      *
@@ -625,5 +627,53 @@ public class QuerydslBasicTest {
         for (UserDto userDto : result) {
             System.out.println("userDto = " + userDto.getName() + "_" + userDto.getAge());
         }
+    }
+
+    @DisplayName("쿼리프로젝션 사용")
+    @Test
+    public void findDtoQueryProjection(){
+        // 단점 : QMemberDto 생성, MemberDto 는 QueryDsl의 의존성을 가짐
+        List<MemberDto> result = queryFactory
+                .select(new QMemberDto(member.username, member.age))
+                .from(member)
+                .fetch();
+
+        for (MemberDto memberDto : result) {
+            System.out.println("memberDto = " + memberDto);
+        }
+    }
+
+    @DisplayName("BooleanBuilder 사용")
+    @Test
+    public void dynamicQuery_BooleanBuilder(){
+        String usernameParam = "member1";
+        Integer ageParam = 10;
+
+        List<Member> result = searchMember1(usernameParam, null);
+
+        for (Member member1 : result) {
+            System.out.println("member1 = " + member1);
+        }
+    }
+
+    /**
+     * BooleanBuilder 사용
+     * */
+    private List<Member> searchMember1(String usernameParam, Integer ageParam) {
+
+        BooleanBuilder builder = new BooleanBuilder();
+        if(usernameParam != null){
+            builder.and(member.username.eq(usernameParam));
+        }
+
+        if(ageParam != null){
+            builder.and(member.age.eq(ageParam));
+        }
+
+        return queryFactory
+                .select(member)
+                .from(member)
+                .where(builder)
+                .fetch();
     }
 }
