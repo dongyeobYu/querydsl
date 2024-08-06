@@ -19,6 +19,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.dto.MemberDto;
 import study.querydsl.dto.QMemberDto;
@@ -707,4 +708,98 @@ public class QuerydslBasicTest {
     }
 
     //광고 상태 isServiceable(서비스 가능), 날짜가 IN ,,,
+
+
+    @DisplayName("벌크업데이트")
+    @Test
+    public void bulkUpdate() throws Exception{
+
+        /**
+         * member1 = 10 -> 영속성 컨텍스트:member1 DB:비회원
+         * member2 = 20 -> 영속성 컨텍스트:member2 DB:비회원
+         * member3 = 30 -> 영속성 컨텍스트:member3 DB:유지
+         * member4 = 40 -> 영속성 컨텍스트:member4 DB:유지
+         * */
+
+        // 벌크연산 -> 영속성 컨텍스트를 무시하고 바로 DB에 쿼리를 날려버림
+        long count = queryFactory
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(28))
+                .execute();
+
+        em.flush();
+        em.clear();
+
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .fetch();
+
+        for (Member member1 : result) {
+            System.out.println("member1 = " + member1);
+        }
+    }
+
+    @DisplayName("벌크 더하기")
+    @Test
+    public void bulkAdd() throws Exception{
+        long count = queryFactory
+                .update(member)
+                .set(member.age, member.age.add(+1))
+                .execute();
+
+        //em.flush();
+        //em.clear();
+
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .fetch();
+
+        for (Member member1 : result) {
+            System.out.println("member1 = " + member1);
+        }
+    }
+
+    @DisplayName("벌크 삭제")
+    @Test
+    public void bulkDelete() throws Exception{
+        long execute = queryFactory
+                .delete(member)
+                .where(member.age.lt(18))
+                .execute();
+    }
+
+    @DisplayName("SQL 호출")
+    @Test
+    public void sqlFunction() throws Exception{
+        List<String> result = queryFactory
+                .select(
+                        Expressions.stringTemplate("function('replace', {0}, {1}, {2})", member.username, "member", "m")
+                )
+                .from(member)
+                .fetch();
+
+        for (String s : result) {
+            System.out.println("s = " + s);
+        }
+
+    }
+
+    @DisplayName("SQL 호출2")
+    @Test
+    public void sqlFunction2() throws Exception{
+        List<String> result = queryFactory
+                .select(member.username)
+                .from(member)
+//                .where(member.username.eq(
+//                        Expressions.stringTemplate("function('lower', {0})", member.username)
+//                ))
+                .where(member.username.eq(member.username.lower()))
+                .fetch();
+
+        for (String s : result) {
+            System.out.println("s = " + s);
+        }
+
+    }
 }

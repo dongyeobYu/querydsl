@@ -1,6 +1,6 @@
 spring:
    profiles:
-    include: company
+    include: home
 
    jpa:
     hibernate:
