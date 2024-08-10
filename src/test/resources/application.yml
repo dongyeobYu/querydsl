@@ -1,0 +1,12 @@
+spring:
+  profiles:
+    include: home    # application-home.yml 을 포함시킴
+    active: test    #
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        show_sql: true
+        #format_sql: true
