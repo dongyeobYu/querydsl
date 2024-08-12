@@ -1,6 +1,6 @@
 spring:
    profiles:
-     include: home    # application-home.yml 을 포함시킴
+     include: company    # application-home.yml 을 포함시킴
      active: local    #
 
    jpa:
